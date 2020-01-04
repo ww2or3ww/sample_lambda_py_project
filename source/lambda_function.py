@@ -1,6 +1,7 @@
 # coding: UTF-8
 import boto3
 import os
+import json
 from urllib.parse import unquote_plus
 import numpy as np
 import cv2
@@ -60,7 +61,7 @@ def lambda_handler(event, context):
         detectFaces(bucket, key, fileName, orgImage, dirName, dirPathOut)
 
     except Exception as e:
-        logger.error(e)
+        logger.exception(e)
         raise e
         
     finally:
@@ -74,7 +75,7 @@ def uploadImage(image, localFilePath, bucket, s3Key, group):
         s3.upload_file(Filename=localFilePath, Bucket=bucket, Key=s3Key)
         apiCreateTable(group, s3Key)
     except Exception as e:
-        logger.error(e)
+        logger.exception(e)
         raise e
     finally:
         if os.path.exists(localFilePath):
@@ -95,7 +96,7 @@ def apiCreateTable(group, path):
             """.format(group, path))
         _client.execute(query)
     except Exception as e:
-        logger.error(e)
+        logger.exception(e)
         raise e
 
 def detectFaces(bucket, key, fileName, image, group, dirPathOut):
@@ -109,11 +110,20 @@ def detectFaces(bucket, key, fileName, image, group, dirPathOut):
                 }
             },
             Attributes=[
-                "DEFAULT",
+                "ALL",
             ]
         )
-        
+
         name, ext = os.path.splitext(fileName)
+        
+        jsonFileName = name + ".json"
+        localPathJSON = "/tmp/" + jsonFileName
+        with open(localPathJSON, 'w') as f:
+            json.dump(response, f, ensure_ascii=False)
+        s3.upload_file(Filename=localPathJSON, Bucket=bucket, Key=os.path.join(dirPathOut, jsonFileName))
+        if os.path.exists(localPathJSON):
+            os.remove(localPathJSON)
+        
         imgHeight = image.shape[0]
         imgWidth = image.shape[1]
         index = 0
@@ -137,4 +147,5 @@ def detectFaces(bucket, key, fileName, image, group, dirPathOut):
         processedFilePath = "/tmp/" + processedFileName
         uploadImage(image, processedFilePath, bucket, os.path.join(dirPathOut, processedFileName), group)
     except Exception as e:
-        logger.error(e)
+        logger.exception(e)
+        raise e
