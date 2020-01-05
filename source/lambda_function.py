@@ -13,8 +13,8 @@ rekognition = boto3.client('rekognition')
 
 from gql import gql, Client
 from gql.transport.requests import RequestsHTTPTransport
-ENDPOINT = "https://alcobs3s65as5mboez7swwzlyu.appsync-api.ap-northeast-1.amazonaws.com/graphql"
-API_KEY = "da2-berkdxpigfambfqv6hcivejndy"
+ENDPOINT = "https://**************************.appsync-api.ap-northeast-1.amazonaws.com/graphql"
+API_KEY = "da2-**************************"
 _headers = {
     "Content-Type": "application/graphql",
     "x-api-key": API_KEY,
